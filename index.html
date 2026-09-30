@@ -1,0 +1,1623 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>DMS - Datic Management Software | TechRass</title>
+<link rel="icon" href="logo.png" type="image/png">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html5-qrcode/2.3.8/html5-qrcode.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root {
+  --green-900: #0d3b0d;
+  --green-800: #145214;
+  --green-700: #1B5E20;
+  --green-600: #2E7D32;
+  --green-500: #388E3C;
+  --green-400: #4CAF50;
+  --green-300: #66BB6A;
+  --green-200: #81C784;
+  --green-100: #C8E6C9;
+  --black-900: #0a0a0a;
+  --black-800: #111111;
+  --black-700: #1a1a1a;
+  --black-600: #222222;
+  --black-500: #2a2a2a;
+  --text-primary: #f0f0f0;
+  --text-secondary: #a0a0a0;
+  --text-muted: #666;
+  --danger: #ef4444;
+  --danger-bg: #2d1515;
+  --success: #4CAF50;
+  --success-bg: #152d15;
+  --warning: #f59e0b;
+  --warning-bg: #2d2515;
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  background: var(--black-900);
+  color: var(--text-primary);
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
+.sidebar {
+  position: fixed;
+  left: 0;
+  top: 0;
+  width: 260px;
+  height: 100vh;
+  background: var(--black-800);
+  border-right: 1px solid var(--black-600);
+  display: flex;
+  flex-direction: column;
+  z-index: 100;
+  transition: transform 0.3s ease;
+}
+
+.sidebar-header {
+  padding: 24px 20px;
+  border-bottom: 1px solid var(--black-600);
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.sidebar-header img {
+  width: 40px;
+  height: 40px;
+  border-radius: 8px;
+}
+
+.sidebar-header .brand {
+  display: flex;
+  flex-direction: column;
+}
+
+.sidebar-header .brand-name {
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--green-400);
+  letter-spacing: 1px;
+}
+
+.sidebar-header .brand-sub {
+  font-size: 11px;
+  color: var(--text-muted);
+  letter-spacing: 0.5px;
+}
+
+.sidebar-nav {
+  flex: 1;
+  padding: 16px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.nav-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 16px;
+  border-radius: 8px;
+  cursor: pointer;
+  color: var(--text-secondary);
+  font-size: 14px;
+  font-weight: 500;
+  transition: all 0.2s;
+  border: none;
+  background: none;
+  width: 100%;
+  text-align: left;
+}
+
+.nav-item:hover { background: var(--black-600); color: var(--text-primary); }
+.nav-item.active { background: var(--green-900); color: var(--green-400); border: 1px solid var(--green-800); }
+.nav-item svg { width: 20px; height: 20px; flex-shrink: 0; }
+
+.sidebar-footer {
+  padding: 16px 20px;
+  border-top: 1px solid var(--black-600);
+  text-align: center;
+}
+
+.event-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 16px;
+  background: linear-gradient(135deg, var(--green-900), var(--green-800));
+  border: 1px solid var(--green-700);
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--green-300);
+  letter-spacing: 1px;
+}
+
+.main {
+  margin-left: 260px;
+  min-height: 100vh;
+  padding: 0;
+}
+
+.topbar {
+  position: sticky;
+  top: 0;
+  z-index: 50;
+  padding: 16px 32px;
+  background: rgba(10,10,10,0.85);
+  backdrop-filter: blur(12px);
+  border-bottom: 1px solid var(--black-600);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.topbar h1 {
+  font-size: 20px;
+  font-weight: 700;
+}
+
+.topbar-actions { display: flex; gap: 12px; align-items: center; }
+
+.mobile-menu {
+  display: none;
+  background: none;
+  border: none;
+  color: var(--text-primary);
+  cursor: pointer;
+  padding: 8px;
+}
+
+.mobile-menu svg { width: 24px; height: 24px; }
+
+.content { padding: 32px; }
+
+.page { display: none; }
+.page.active { display: block; }
+
+/* Stats Cards */
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 16px;
+  margin-bottom: 32px;
+}
+
+.stat-card {
+  background: var(--black-700);
+  border: 1px solid var(--black-600);
+  border-radius: 12px;
+  padding: 24px;
+  position: relative;
+  overflow: hidden;
+}
+
+.stat-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+}
+
+.stat-card.green::before { background: var(--green-500); }
+.stat-card.success::before { background: var(--success); }
+.stat-card.warning::before { background: var(--warning); }
+.stat-card.danger::before { background: var(--danger); }
+
+.stat-label {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  margin-bottom: 8px;
+}
+
+.stat-value {
+  font-size: 36px;
+  font-weight: 800;
+  line-height: 1;
+}
+
+.stat-card.green .stat-value { color: var(--green-400); }
+.stat-card.success .stat-value { color: var(--success); }
+.stat-card.warning .stat-value { color: var(--warning); }
+.stat-card.danger .stat-value { color: var(--danger); }
+
+/* Cards */
+.card {
+  background: var(--black-700);
+  border: 1px solid var(--black-600);
+  border-radius: 12px;
+  padding: 24px;
+  margin-bottom: 24px;
+}
+
+.card-title {
+  font-size: 16px;
+  font-weight: 700;
+  margin-bottom: 16px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.card-title svg { width: 20px; height: 20px; color: var(--green-400); }
+
+/* Buttons */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 20px;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  border: none;
+  transition: all 0.2s;
+  font-family: inherit;
+}
+
+.btn-primary {
+  background: var(--green-700);
+  color: white;
+  border: 1px solid var(--green-600);
+}
+
+.btn-primary:hover { background: var(--green-600); }
+
+.btn-secondary {
+  background: var(--black-600);
+  color: var(--text-primary);
+  border: 1px solid var(--black-500);
+}
+
+.btn-secondary:hover { background: var(--black-500); }
+
+.btn-danger {
+  background: var(--danger-bg);
+  color: var(--danger);
+  border: 1px solid #4a1515;
+}
+
+.btn-danger:hover { background: #3d1515; }
+
+.btn-success {
+  background: var(--success-bg);
+  color: var(--success);
+  border: 1px solid #1a4a1a;
+}
+
+.btn-success:hover { background: #1a3d1a; }
+
+.btn svg { width: 16px; height: 16px; }
+
+.btn-group { display: flex; gap: 8px; flex-wrap: wrap; }
+
+/* Inputs */
+.input-group { margin-bottom: 16px; }
+
+.input-group label {
+  display: block;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-secondary);
+  margin-bottom: 6px;
+}
+
+.input-field {
+  width: 100%;
+  padding: 10px 14px;
+  background: var(--black-800);
+  border: 1px solid var(--black-500);
+  border-radius: 8px;
+  color: var(--text-primary);
+  font-size: 14px;
+  font-family: inherit;
+  transition: border-color 0.2s;
+}
+
+.input-field:focus {
+  outline: none;
+  border-color: var(--green-600);
+  box-shadow: 0 0 0 3px rgba(46,125,50,0.2);
+}
+
+.input-field::placeholder { color: var(--text-muted); }
+
+/* Table */
+.table-wrap {
+  overflow-x: auto;
+  border-radius: 8px;
+  border: 1px solid var(--black-600);
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 14px;
+}
+
+thead { background: var(--black-800); }
+
+th {
+  padding: 12px 16px;
+  text-align: left;
+  font-weight: 600;
+  color: var(--text-secondary);
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  white-space: nowrap;
+}
+
+td {
+  padding: 12px 16px;
+  border-top: 1px solid var(--black-600);
+  white-space: nowrap;
+}
+
+tr:hover { background: var(--black-600); }
+
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 10px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.badge-available {
+  background: var(--success-bg);
+  color: var(--success);
+  border: 1px solid #1a4a1a;
+}
+
+.badge-scanned {
+  background: var(--danger-bg);
+  color: var(--danger);
+  border: 1px solid #4a1515;
+}
+
+.badge-manual {
+  background: var(--warning-bg);
+  color: var(--warning);
+  border: 1px solid #4a3a15;
+}
+
+/* Scanner */
+#scanner-container {
+  width: 100%;
+  max-width: 500px;
+  margin: 0 auto;
+  border-radius: 12px;
+  overflow: hidden;
+  border: 2px solid var(--green-700);
+  background: var(--black-900);
+}
+
+#scanner-container video { border-radius: 10px; }
+
+.scanner-result {
+  padding: 20px;
+  border-radius: 12px;
+  margin-top: 16px;
+  text-align: center;
+  font-weight: 600;
+  font-size: 16px;
+  display: none;
+}
+
+.scanner-result.success-result {
+  display: block;
+  background: var(--success-bg);
+  border: 1px solid #1a4a1a;
+  color: var(--success);
+}
+
+.scanner-result.error-result {
+  display: block;
+  background: var(--danger-bg);
+  border: 1px solid #4a1515;
+  color: var(--danger);
+}
+
+.scanner-result.info-result {
+  display: block;
+  background: var(--warning-bg);
+  border: 1px solid #4a3a15;
+  color: var(--warning);
+}
+
+/* QR Grid */
+.qr-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  gap: 16px;
+}
+
+.qr-item {
+  background: var(--black-800);
+  border: 1px solid var(--black-600);
+  border-radius: 10px;
+  padding: 16px;
+  text-align: center;
+  transition: all 0.2s;
+}
+
+.qr-item:hover {
+  border-color: var(--green-700);
+  transform: translateY(-2px);
+}
+
+.qr-item canvas, .qr-item img {
+  border-radius: 6px;
+  max-width: 100%;
+}
+
+.qr-code-text {
+  margin-top: 8px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--green-400);
+  letter-spacing: 0.5px;
+  word-break: break-all;
+}
+
+/* Search & Filters */
+.toolbar {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  margin-bottom: 16px;
+  flex-wrap: wrap;
+}
+
+.search-box {
+  flex: 1;
+  min-width: 200px;
+  position: relative;
+}
+
+.search-box svg {
+  position: absolute;
+  left: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 16px;
+  height: 16px;
+  color: var(--text-muted);
+}
+
+.search-box .input-field { padding-left: 36px; }
+
+.filter-btn {
+  padding: 10px 16px;
+  background: var(--black-700);
+  border: 1px solid var(--black-500);
+  border-radius: 8px;
+  color: var(--text-secondary);
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.filter-btn.active {
+  background: var(--green-900);
+  border-color: var(--green-700);
+  color: var(--green-400);
+}
+
+.filter-btn:hover { border-color: var(--green-600); }
+
+/* Modal Overlay */
+.modal-overlay {
+  display: none;
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0,0,0,0.7);
+  z-index: 200;
+  align-items: center;
+  justify-content: center;
+}
+
+.modal-overlay.visible { display: flex; }
+
+.modal {
+  background: var(--black-700);
+  border: 1px solid var(--black-500);
+  border-radius: 16px;
+  padding: 32px;
+  max-width: 500px;
+  width: 90%;
+  max-height: 90vh;
+  overflow-y: auto;
+}
+
+.modal-title {
+  font-size: 20px;
+  font-weight: 700;
+  margin-bottom: 20px;
+}
+
+/* Toast */
+.toast-container {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  z-index: 300;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.toast {
+  padding: 14px 20px;
+  border-radius: 10px;
+  font-size: 14px;
+  font-weight: 600;
+  animation: slideIn 0.3s ease, fadeOut 0.3s ease 2.7s;
+  min-width: 250px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.toast-success { background: var(--success-bg); color: var(--success); border: 1px solid #1a4a1a; }
+.toast-error { background: var(--danger-bg); color: var(--danger); border: 1px solid #4a1515; }
+.toast-warning { background: var(--warning-bg); color: var(--warning); border: 1px solid #4a3a15; }
+
+@keyframes slideIn { from { transform: translateX(100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+@keyframes fadeOut { from { opacity: 1; } to { opacity: 0; } }
+
+/* Recent Activity */
+.activity-list { display: flex; flex-direction: column; gap: 8px; }
+
+.activity-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px;
+  background: var(--black-800);
+  border-radius: 8px;
+  font-size: 13px;
+}
+
+.activity-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.activity-dot.scan { background: var(--success); }
+.activity-dot.manual { background: var(--warning); }
+.activity-dot.generate { background: var(--green-400); }
+
+.activity-time {
+  margin-left: auto;
+  color: var(--text-muted);
+  font-size: 12px;
+  white-space: nowrap;
+}
+
+/* Manual Entry */
+.manual-entry-wrap {
+  max-width: 500px;
+  margin: 0 auto;
+}
+
+/* Progress bar for generation */
+.progress-bar {
+  width: 100%;
+  height: 6px;
+  background: var(--black-600);
+  border-radius: 3px;
+  overflow: hidden;
+  margin: 16px 0;
+  display: none;
+}
+
+.progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--green-700), var(--green-400));
+  border-radius: 3px;
+  transition: width 0.3s ease;
+  width: 0%;
+}
+
+/* Pulse animation for scanner */
+.scanner-active {
+  animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(76, 175, 80, 0.4); }
+  50% { box-shadow: 0 0 0 12px rgba(76, 175, 80, 0); }
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .sidebar { transform: translateX(-100%); }
+  .sidebar.open { transform: translateX(0); }
+  .main { margin-left: 0; }
+  .mobile-menu { display: block; }
+  .content { padding: 16px; }
+  .stats-grid { grid-template-columns: repeat(2, 1fr); }
+  .qr-grid { grid-template-columns: repeat(2, 1fr); }
+  .topbar { padding: 12px 16px; }
+  .topbar h1 { font-size: 16px; }
+}
+
+@media (max-width: 480px) {
+  .stats-grid { grid-template-columns: 1fr; }
+  .qr-grid { grid-template-columns: 1fr; }
+}
+
+/* Scrollbar */
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: var(--black-800); }
+::-webkit-scrollbar-thumb { background: var(--black-500); border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: var(--green-800); }
+
+/* Empty state */
+.empty-state {
+  text-align: center;
+  padding: 48px 24px;
+  color: var(--text-muted);
+}
+
+.empty-state svg { width: 48px; height: 48px; margin-bottom: 16px; opacity: 0.4; }
+.empty-state h3 { font-size: 16px; margin-bottom: 8px; color: var(--text-secondary); }
+.empty-state p { font-size: 13px; }
+</style>
+</head>
+<body>
+
+<!-- Toast Container -->
+<div class="toast-container" id="toastContainer"></div>
+
+<!-- Sidebar -->
+<div class="sidebar" id="sidebar">
+  <div class="sidebar-header">
+    <img src="logo.png" alt="DMS Logo">
+    <div class="brand">
+      <span class="brand-name">DMS</span>
+      <span class="brand-sub">Datic Management Software</span>
+    </div>
+  </div>
+  <nav class="sidebar-nav">
+    <button class="nav-item active" onclick="navigate('dashboard')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+      Dashboard
+    </button>
+    <button class="nav-item" onclick="navigate('generate')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M7 7h3v3H7zM14 7h3v3h-3zM7 14h3v3H7z"/></svg>
+      Generate QR Codes
+    </button>
+    <button class="nav-item" onclick="navigate('scanner')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 4V1h3M20 1h3v3M1 20v3h3M20 23h3v-3"/><line x1="1" y1="12" x2="23" y2="12"/></svg>
+      Scan Pass
+    </button>
+    <button class="nav-item" onclick="navigate('manual')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+      Manual Entry
+    </button>
+    <button class="nav-item" onclick="navigate('passes')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+      All Passes
+    </button>
+    <button class="nav-item" onclick="navigate('export')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+      Export / Download
+    </button>
+  </nav>
+  <div class="sidebar-footer">
+    <div class="event-badge">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+      TECHRASS EVENT
+    </div>
+  </div>
+</div>
+
+<!-- Mobile Overlay -->
+<div id="mobileOverlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:99" onclick="closeSidebar()"></div>
+
+<!-- Main Content -->
+<div class="main">
+  <div class="topbar">
+    <div style="display:flex;align-items:center;gap:12px">
+      <button class="mobile-menu" onclick="toggleSidebar()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+      </button>
+      <h1 id="pageTitle">Dashboard</h1>
+    </div>
+    <div class="topbar-actions">
+      <span style="font-size:12px;color:var(--text-muted)" id="clockDisplay"></span>
+    </div>
+  </div>
+
+  <div class="content">
+
+    <!-- ========== DASHBOARD ========== -->
+    <div class="page active" id="page-dashboard">
+      <div class="stats-grid">
+        <div class="stat-card green">
+          <div class="stat-label">Total Passes</div>
+          <div class="stat-value" id="statTotal">0</div>
+        </div>
+        <div class="stat-card success">
+          <div class="stat-label">Available</div>
+          <div class="stat-value" id="statAvailable">0</div>
+        </div>
+        <div class="stat-card danger">
+          <div class="stat-label">Scanned</div>
+          <div class="stat-value" id="statScanned">0</div>
+        </div>
+        <div class="stat-card warning">
+          <div class="stat-label">Manual Entries</div>
+          <div class="stat-value" id="statManual">0</div>
+        </div>
+      </div>
+
+      <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(300px, 1fr));gap:24px">
+        <div class="card">
+          <div class="card-title">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+            Recent Activity
+          </div>
+          <div class="activity-list" id="activityList">
+            <div class="empty-state">
+              <p>No activity yet. Generate passes or scan QR codes to get started.</p>
+            </div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-title">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 20V10M12 20V4M6 20v-6"/></svg>
+            Quick Actions
+          </div>
+          <div style="display:flex;flex-direction:column;gap:10px">
+            <button class="btn btn-primary" onclick="navigate('generate')" style="width:100%;justify-content:center">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+              Generate New QR Codes
+            </button>
+            <button class="btn btn-success" onclick="navigate('scanner')" style="width:100%;justify-content:center">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><path d="M1 4V1h3M20 1h3v3M1 20v3h3M20 23h3v-3"/></svg>
+              Open Scanner
+            </button>
+            <button class="btn btn-secondary" onclick="navigate('manual')" style="width:100%;justify-content:center">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/></svg>
+              Manual Entry
+            </button>
+            <button class="btn btn-secondary" onclick="navigate('export')" style="width:100%;justify-content:center">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+              Export Passes
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ========== GENERATE QR CODES ========== -->
+    <div class="page" id="page-generate">
+      <div class="card">
+        <div class="card-title">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M7 7h3v3H7zM14 7h3v3h-3zM7 14h3v3H7z"/></svg>
+          Generate QR Codes
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;max-width:600px">
+          <div class="input-group">
+            <label>Number of Passes</label>
+            <input type="number" class="input-field" id="numPasses" value="10" min="1" max="500" placeholder="e.g. 10">
+          </div>
+          <div class="input-group">
+            <label>Prefix (optional)</label>
+            <input type="text" class="input-field" id="codePrefix" value="TR" placeholder="e.g. TR">
+          </div>
+        </div>
+        <div class="progress-bar" id="genProgress">
+          <div class="progress-fill" id="genProgressFill"></div>
+        </div>
+        <div class="btn-group">
+          <button class="btn btn-primary" onclick="generatePasses()" id="generateBtn">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+            Generate
+          </button>
+          <button class="btn btn-danger" onclick="confirmClearAll()">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+            Clear All Passes
+          </button>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-title">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+          All QR Codes <span id="qrCount" style="font-weight:400;font-size:13px;color:var(--text-muted)"></span>
+        </div>
+        <div class="qr-grid" id="qrGrid">
+          <div class="empty-state">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M7 7h3v3H7zM14 7h3v3h-3zM7 14h3v3H7z"/></svg>
+            <h3>No QR Codes Yet</h3>
+            <p>Set the number of passes above and click Generate.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ========== SCANNER ========== -->
+    <div class="page" id="page-scanner">
+      <div class="card" style="max-width:600px;margin:0 auto">
+        <div class="card-title">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 4V1h3M20 1h3v3M1 20v3h3M20 23h3v-3"/><line x1="1" y1="12" x2="23" y2="12"/></svg>
+          QR Code Scanner
+        </div>
+        <p style="font-size:13px;color:var(--text-secondary);margin-bottom:16px">Point your camera at a pass QR code to scan and register the entry.</p>
+        <div class="btn-group" style="margin-bottom:16px">
+          <button class="btn btn-primary" onclick="startScanner()" id="startScanBtn">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+            Start Scanner
+          </button>
+          <button class="btn btn-secondary" onclick="stopScanner()" id="stopScanBtn" style="display:none">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/></svg>
+            Stop Scanner
+          </button>
+        </div>
+        <div id="scanner-container"></div>
+        <div class="scanner-result" id="scanResult"></div>
+      </div>
+    </div>
+
+    <!-- ========== MANUAL ENTRY ========== -->
+    <div class="page" id="page-manual">
+      <div class="card manual-entry-wrap">
+        <div class="card-title">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+          Manual Pass Entry
+        </div>
+        <p style="font-size:13px;color:var(--text-secondary);margin-bottom:20px">Enter the coupon code printed on the pass to manually register entry.</p>
+        <div class="input-group">
+          <label>Coupon Code</label>
+          <input type="text" class="input-field" id="manualCode" placeholder="e.g. TR-A1B2C3" style="font-size:18px;text-align:center;letter-spacing:2px;text-transform:uppercase" autocomplete="off">
+        </div>
+        <button class="btn btn-primary" onclick="manualEntry()" style="width:100%;justify-content:center;padding:14px">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><polyline points="20 6 9 17 4 12"/></svg>
+          Register Entry
+        </button>
+        <div class="scanner-result" id="manualResult" style="margin-top:16px"></div>
+      </div>
+    </div>
+
+    <!-- ========== ALL PASSES ========== -->
+    <div class="page" id="page-passes">
+      <div class="card">
+        <div class="card-title">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+          All Passes
+        </div>
+        <div class="toolbar">
+          <div class="search-box">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+            <input type="text" class="input-field" id="searchPasses" placeholder="Search by coupon code..." oninput="renderPassTable()">
+          </div>
+          <button class="filter-btn active" onclick="setFilter('all', this)">All</button>
+          <button class="filter-btn" onclick="setFilter('available', this)">Available</button>
+          <button class="filter-btn" onclick="setFilter('scanned', this)">Scanned</button>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>#</th>
+                <th>Coupon Code</th>
+                <th>Status</th>
+                <th>Entry Method</th>
+                <th>Scanned At</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="passTableBody">
+            </tbody>
+          </table>
+        </div>
+        <div class="empty-state" id="passesEmpty" style="display:none">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/></svg>
+          <h3>No Passes Found</h3>
+          <p>Generate some QR codes first from the Generate section.</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- ========== EXPORT ========== -->
+    <div class="page" id="page-export">
+      <div class="stats-grid" style="grid-template-columns:repeat(auto-fit, minmax(280px,1fr))">
+        <div class="card">
+          <div class="card-title">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="color:#ef4444"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+            Download QR Codes as PDF
+          </div>
+          <p style="font-size:13px;color:var(--text-secondary);margin-bottom:16px">Export all QR codes into a printable PDF file. Each page contains multiple QR codes with their coupon numbers.</p>
+          <div class="input-group">
+            <label>QR Codes per page</label>
+            <select class="input-field" id="qrPerPage">
+              <option value="6">6 per page (Large)</option>
+              <option value="12" selected>12 per page (Medium)</option>
+              <option value="20">20 per page (Small)</option>
+            </select>
+          </div>
+          <button class="btn btn-primary" onclick="exportPDF()" style="width:100%;justify-content:center">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+            Download PDF
+          </button>
+        </div>
+
+        <div class="card">
+          <div class="card-title">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="color:var(--green-400)"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+            Download as Excel
+          </div>
+          <p style="font-size:13px;color:var(--text-secondary);margin-bottom:16px">Export all pass data with QR images embedded into an Excel spreadsheet for records and tracking.</p>
+          <button class="btn btn-primary" onclick="exportExcel()" style="width:100%;justify-content:center">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+            Download Excel
+          </button>
+        </div>
+
+        <div class="card">
+          <div class="card-title">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="color:var(--warning)"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M7 7h3v3H7zM14 7h3v3h-3zM7 14h3v3H7z"/></svg>
+            Download QR Images (ZIP)
+          </div>
+          <p style="font-size:13px;color:var(--text-secondary);margin-bottom:16px">Download all QR code images as individual PNG files. Each image is labeled with the coupon code.</p>
+          <button class="btn btn-primary" onclick="exportImages()" style="width:100%;justify-content:center">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+            Download Images
+          </button>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- Confirm Modal -->
+<div class="modal-overlay" id="confirmModal">
+  <div class="modal">
+    <div class="modal-title" id="confirmTitle">Confirm Action</div>
+    <p style="color:var(--text-secondary);margin-bottom:24px" id="confirmMessage">Are you sure?</p>
+    <div class="btn-group" style="justify-content:flex-end">
+      <button class="btn btn-secondary" onclick="closeModal()">Cancel</button>
+      <button class="btn btn-danger" id="confirmAction" onclick="closeModal()">Confirm</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ========== DATA STORE ==========
+const STORAGE_KEY = 'dms_techrass_passes';
+const ACTIVITY_KEY = 'dms_techrass_activity';
+
+function loadPasses() {
+  try { return JSON.parse(localStorage.getItem(STORAGE_KEY)) || []; }
+  catch { return []; }
+}
+
+function savePasses(passes) {
+  try { localStorage.setItem(STORAGE_KEY, JSON.stringify(passes)); }
+  catch {}
+}
+
+function loadActivity() {
+  try { return JSON.parse(localStorage.getItem(ACTIVITY_KEY)) || []; }
+  catch { return []; }
+}
+
+function saveActivity(list) {
+  try { localStorage.setItem(ACTIVITY_KEY, JSON.stringify(list.slice(0, 50))); }
+  catch {}
+}
+
+function addActivity(type, message) {
+  const list = loadActivity();
+  list.unshift({ type, message, time: new Date().toISOString() });
+  saveActivity(list);
+}
+
+// ========== NAVIGATION ==========
+let currentPage = 'dashboard';
+let currentFilter = 'all';
+let html5QrCode = null;
+let scannerRunning = false;
+let lastScannedCode = '';
+let scanCooldown = false;
+
+function navigate(page) {
+  currentPage = page;
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.getElementById('page-' + page).classList.add('active');
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  document.querySelectorAll('.nav-item')[['dashboard','generate','scanner','manual','passes','export'].indexOf(page)].classList.add('active');
+
+  const titles = { dashboard:'Dashboard', generate:'Generate QR Codes', scanner:'Scan Pass', manual:'Manual Entry', passes:'All Passes', export:'Export / Download' };
+  document.getElementById('pageTitle').textContent = titles[page];
+
+  if (page === 'dashboard') updateDashboard();
+  if (page === 'generate') renderQRGrid(loadPasses());
+  if (page === 'passes') renderPassTable();
+  if (page === 'scanner') { /* scanner auto-start off */ }
+  if (page !== 'scanner' && scannerRunning) stopScanner();
+
+  closeSidebar();
+}
+
+function toggleSidebar() {
+  document.getElementById('sidebar').classList.toggle('open');
+  document.getElementById('mobileOverlay').style.display =
+    document.getElementById('sidebar').classList.contains('open') ? 'block' : 'none';
+}
+
+function closeSidebar() {
+  document.getElementById('sidebar').classList.remove('open');
+  document.getElementById('mobileOverlay').style.display = 'none';
+}
+
+// ========== DASHBOARD ==========
+function updateDashboard() {
+  const passes = loadPasses();
+  const total = passes.length;
+  const scanned = passes.filter(p => p.status === 'scanned').length;
+  const manual = passes.filter(p => p.entryMethod === 'manual').length;
+  const available = total - scanned;
+
+  document.getElementById('statTotal').textContent = total;
+  document.getElementById('statAvailable').textContent = available;
+  document.getElementById('statScanned').textContent = scanned;
+  document.getElementById('statManual').textContent = manual;
+
+  const actList = document.getElementById('activityList');
+  const activities = loadActivity();
+  if (activities.length === 0) {
+    actList.innerHTML = '<div class="empty-state"><p>No activity yet. Generate passes or scan QR codes to get started.</p></div>';
+  } else {
+    actList.innerHTML = activities.slice(0, 10).map(a => {
+      const d = new Date(a.time);
+      const timeStr = d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+      return `<div class="activity-item">
+        <div class="activity-dot ${a.type}"></div>
+        <span>${a.message}</span>
+        <span class="activity-time">${timeStr}</span>
+      </div>`;
+    }).join('');
+  }
+}
+
+// ========== GENERATE PASSES ==========
+function generateCouponCode(prefix) {
+  const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+  let code = '';
+  for (let i = 0; i < 6; i++) code += chars[Math.floor(Math.random() * chars.length)];
+  return (prefix ? prefix + '-' : '') + code;
+}
+
+async function generatePasses() {
+  const num = parseInt(document.getElementById('numPasses').value);
+  const prefix = document.getElementById('codePrefix').value.trim().toUpperCase();
+
+  if (!num || num < 1 || num > 500) {
+    showToast('Enter a number between 1 and 500', 'error');
+    return;
+  }
+
+  const btn = document.getElementById('generateBtn');
+  btn.disabled = true;
+  btn.innerHTML = '<svg class="spinner" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><circle cx="12" cy="12" r="10"/></svg> Generating...';
+
+  const progressBar = document.getElementById('genProgress');
+  const progressFill = document.getElementById('genProgressFill');
+  progressBar.style.display = 'block';
+
+  const passes = loadPasses();
+  const existingCodes = new Set(passes.map(p => p.code));
+  const newPasses = [];
+
+  for (let i = 0; i < num; i++) {
+    let code;
+    do { code = generateCouponCode(prefix); } while (existingCodes.has(code));
+    existingCodes.add(code);
+    newPasses.push({
+      id: Date.now().toString(36) + Math.random().toString(36).substr(2, 5),
+      code: code,
+      status: 'available',
+      entryMethod: null,
+      scannedAt: null,
+      createdAt: new Date().toISOString()
+    });
+    progressFill.style.width = ((i + 1) / num * 100) + '%';
+    if (i % 10 === 0) await new Promise(r => setTimeout(r, 0));
+  }
+
+  passes.push(...newPasses);
+  savePasses(passes);
+  addActivity('generate', `Generated ${num} new passes`);
+
+  progressBar.style.display = 'none';
+  progressFill.style.width = '0%';
+  btn.disabled = false;
+  btn.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg> Generate';
+
+  renderQRGrid(newPasses);
+  showToast(`${num} passes generated successfully!`, 'success');
+}
+
+function renderQRGrid(passes) {
+  const grid = document.getElementById('qrGrid');
+  const countEl = document.getElementById('qrCount');
+  if (passes.length === 0) {
+    grid.innerHTML = '<div class="empty-state"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/></svg><h3>No QR Codes Yet</h3><p>Set the number of passes and click Generate.</p></div>';
+    if (countEl) countEl.textContent = '';
+    return;
+  }
+  if (countEl) countEl.textContent = `(${passes.length} total)`;
+  grid.innerHTML = '';
+
+  passes.forEach((pass, idx) => {
+    const item = document.createElement('div');
+    item.className = 'qr-item';
+    if (pass.status === 'scanned') item.style.opacity = '0.5';
+    const qrDiv = document.createElement('div');
+    qrDiv.id = 'qr-' + pass.id;
+    item.appendChild(qrDiv);
+    const label = document.createElement('div');
+    label.className = 'qr-code-text';
+    label.textContent = pass.code;
+    if (pass.status === 'scanned') label.style.color = 'var(--danger)';
+    item.appendChild(label);
+    grid.appendChild(item);
+
+    setTimeout(() => {
+      new QRCode(qrDiv, {
+        text: pass.code,
+        width: 140,
+        height: 140,
+        colorDark: '#1B5E20',
+        colorLight: '#ffffff',
+        correctLevel: QRCode.CorrectLevel.H
+      });
+    }, idx * 5);
+  });
+}
+
+// ========== SCANNER ==========
+function startScanner() {
+  const scanResult = document.getElementById('scanResult');
+  scanResult.className = 'scanner-result';
+  scanResult.style.display = 'none';
+
+  document.getElementById('startScanBtn').style.display = 'none';
+  document.getElementById('stopScanBtn').style.display = 'inline-flex';
+
+  html5QrCode = new Html5Qrcode('scanner-container');
+  scannerRunning = true;
+
+  const container = document.getElementById('scanner-container');
+  container.classList.add('scanner-active');
+
+  html5QrCode.start(
+    { facingMode: 'environment' },
+    {
+      fps: 15,
+      qrbox: { width: 250, height: 250 },
+      aspectRatio: 1.0,
+      disableFlip: false,
+      experimentalFeatures: { useBarCodeDetectorIfSupported: true }
+    },
+    onScanSuccess,
+    () => {}
+  ).catch(err => {
+    showToast('Camera access denied or not available: ' + err, 'error');
+    resetScannerUI();
+  });
+}
+
+function stopScanner() {
+  if (html5QrCode && scannerRunning) {
+    html5QrCode.stop().then(() => {
+      html5QrCode.clear();
+      resetScannerUI();
+    }).catch(() => resetScannerUI());
+  }
+}
+
+function resetScannerUI() {
+  scannerRunning = false;
+  document.getElementById('startScanBtn').style.display = 'inline-flex';
+  document.getElementById('stopScanBtn').style.display = 'none';
+  document.getElementById('scanner-container').classList.remove('scanner-active');
+}
+
+function onScanSuccess(decodedText) {
+  if (scanCooldown) return;
+  const scanned = decodedText.trim().toUpperCase();
+  if (scanned === lastScannedCode) return;
+  lastScannedCode = scanned;
+  scanCooldown = true;
+  setTimeout(() => { scanCooldown = false; }, 2000);
+
+  const passes = loadPasses();
+  const pass = passes.find(p => p.code === scanned);
+  const scanResult = document.getElementById('scanResult');
+
+  if (!pass) {
+    scanResult.className = 'scanner-result error-result';
+    scanResult.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="24" height="24" style="display:inline;vertical-align:middle;margin-right:8px"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg> Invalid Code: ' + decodedText;
+    showToast('Invalid QR code scanned', 'error');
+    return;
+  }
+
+  if (pass.status === 'scanned') {
+    scanResult.className = 'scanner-result info-result';
+    scanResult.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="24" height="24" style="display:inline;vertical-align:middle;margin-right:8px"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg> Already Scanned: ' + pass.code + '<br><small style="font-weight:400">Entered at ' + new Date(pass.scannedAt).toLocaleString() + ' (' + pass.entryMethod + ')</small>';
+    showToast('Pass already used: ' + pass.code, 'warning');
+    return;
+  }
+
+  pass.status = 'scanned';
+  pass.entryMethod = 'scan';
+  pass.scannedAt = new Date().toISOString();
+  savePasses(passes);
+  addActivity('scan', `Scanned pass ${pass.code}`);
+
+  scanResult.className = 'scanner-result success-result';
+  scanResult.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="24" height="24" style="display:inline;vertical-align:middle;margin-right:8px"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg> Entry Confirmed: ' + pass.code;
+  showToast('Entry registered: ' + pass.code, 'success');
+}
+
+// ========== MANUAL ENTRY ==========
+function manualEntry() {
+  const codeInput = document.getElementById('manualCode');
+  const code = codeInput.value.trim().toUpperCase();
+  const result = document.getElementById('manualResult');
+
+  if (!code) {
+    result.className = 'scanner-result error-result';
+    result.innerHTML = 'Please enter a coupon code.';
+    return;
+  }
+
+  const passes = loadPasses();
+  const pass = passes.find(p => p.code === code);
+
+  if (!pass) {
+    result.className = 'scanner-result error-result';
+    result.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20" style="display:inline;vertical-align:middle;margin-right:8px"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg> Code not found: ' + code;
+    showToast('Invalid code: ' + code, 'error');
+    return;
+  }
+
+  if (pass.status === 'scanned') {
+    result.className = 'scanner-result info-result';
+    result.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20" style="display:inline;vertical-align:middle;margin-right:8px"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg> Already entered: ' + pass.code + '<br><small style="font-weight:400">Entered at ' + new Date(pass.scannedAt).toLocaleString() + ' (' + pass.entryMethod + ')</small>';
+    showToast('Pass already used', 'warning');
+    return;
+  }
+
+  pass.status = 'scanned';
+  pass.entryMethod = 'manual';
+  pass.scannedAt = new Date().toISOString();
+  savePasses(passes);
+  addActivity('manual', `Manual entry: ${pass.code}`);
+
+  result.className = 'scanner-result success-result';
+  result.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20" style="display:inline;vertical-align:middle;margin-right:8px"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg> Entry registered: ' + pass.code;
+  showToast('Manual entry confirmed: ' + pass.code, 'success');
+  codeInput.value = '';
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+  const manualInput = document.getElementById('manualCode');
+  manualInput.addEventListener('keypress', e => { if (e.key === 'Enter') manualEntry(); });
+});
+
+// ========== PASS TABLE ==========
+function setFilter(filter, btn) {
+  currentFilter = filter;
+  document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+  if (btn) btn.classList.add('active');
+  renderPassTable();
+}
+
+function renderPassTable() {
+  const passes = loadPasses();
+  const search = (document.getElementById('searchPasses')?.value || '').trim().toUpperCase();
+  const tbody = document.getElementById('passTableBody');
+  const emptyEl = document.getElementById('passesEmpty');
+
+  let filtered = passes;
+  if (currentFilter === 'available') filtered = filtered.filter(p => p.status === 'available');
+  if (currentFilter === 'scanned') filtered = filtered.filter(p => p.status === 'scanned');
+  if (search) filtered = filtered.filter(p => p.code.includes(search));
+
+  if (filtered.length === 0) {
+    tbody.innerHTML = '';
+    emptyEl.style.display = 'block';
+    document.querySelector('.table-wrap').style.display = 'none';
+    return;
+  }
+
+  emptyEl.style.display = 'none';
+  document.querySelector('.table-wrap').style.display = 'block';
+
+  tbody.innerHTML = filtered.map((p, i) => {
+    const statusBadge = p.status === 'available'
+      ? '<span class="badge badge-available">Available</span>'
+      : '<span class="badge badge-scanned">Scanned</span>';
+    const method = p.entryMethod
+      ? (p.entryMethod === 'manual' ? '<span class="badge badge-manual">Manual</span>' : '<span class="badge badge-scanned">QR Scan</span>')
+      : '—';
+    const scannedAt = p.scannedAt ? new Date(p.scannedAt).toLocaleString() : '—';
+    const action = p.status === 'available'
+      ? `<button class="btn btn-success" style="padding:6px 12px;font-size:12px" onclick="markScanned('${p.id}')">Mark Scanned</button>`
+      : `<button class="btn btn-secondary" style="padding:6px 12px;font-size:12px" onclick="undoScan('${p.id}')">Undo</button>`;
+    return `<tr>
+      <td>${i + 1}</td>
+      <td style="font-weight:600;color:var(--green-400);letter-spacing:0.5px">${p.code}</td>
+      <td>${statusBadge}</td>
+      <td>${method}</td>
+      <td style="color:var(--text-secondary);font-size:13px">${scannedAt}</td>
+      <td>${action}</td>
+    </tr>`;
+  }).join('');
+}
+
+function markScanned(id) {
+  const passes = loadPasses();
+  const pass = passes.find(p => p.id === id);
+  if (pass && pass.status === 'available') {
+    pass.status = 'scanned';
+    pass.entryMethod = 'manual';
+    pass.scannedAt = new Date().toISOString();
+    savePasses(passes);
+    addActivity('manual', `Marked ${pass.code} as scanned`);
+    renderPassTable();
+    showToast('Pass marked as scanned', 'success');
+  }
+}
+
+function undoScan(id) {
+  const passes = loadPasses();
+  const pass = passes.find(p => p.id === id);
+  if (pass && pass.status === 'scanned') {
+    pass.status = 'available';
+    pass.entryMethod = null;
+    pass.scannedAt = null;
+    savePasses(passes);
+    addActivity('generate', `Undo scan for ${pass.code}`);
+    renderPassTable();
+    showToast('Scan undone for ' + pass.code, 'warning');
+  }
+}
+
+// ========== CLEAR ALL ==========
+function confirmClearAll() {
+  document.getElementById('confirmTitle').textContent = 'Clear All Passes';
+  document.getElementById('confirmMessage').textContent = 'This will permanently delete all passes and QR codes. This action cannot be undone.';
+  const btn = document.getElementById('confirmAction');
+  btn.textContent = 'Delete All';
+  btn.onclick = () => {
+    savePasses([]);
+    saveActivity([]);
+    renderQRGrid([]);
+    updateDashboard();
+    closeModal();
+    showToast('All passes cleared', 'warning');
+  };
+  document.getElementById('confirmModal').classList.add('visible');
+}
+
+function closeModal() {
+  document.getElementById('confirmModal').classList.remove('visible');
+}
+
+// ========== EXPORT PDF ==========
+async function exportPDF() {
+  const passes = loadPasses();
+  if (passes.length === 0) { showToast('No passes to export', 'error'); return; }
+
+  showToast('Generating PDF...', 'warning');
+
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF('p', 'mm', 'a4');
+  const perPage = parseInt(document.getElementById('qrPerPage').value);
+  const pageW = 210, pageH = 297, margin = 15;
+  const usableW = pageW - 2 * margin;
+  const usableH = pageH - 2 * margin;
+
+  let cols, rows;
+  if (perPage <= 6) { cols = 2; rows = 3; }
+  else if (perPage <= 12) { cols = 3; rows = 4; }
+  else { cols = 4; rows = 5; }
+
+  const cellW = usableW / cols;
+  const cellH = usableH / rows;
+  const qrSize = Math.min(cellW - 10, cellH - 15);
+
+  for (let i = 0; i < passes.length; i++) {
+    if (i > 0 && i % perPage === 0) doc.addPage();
+
+    const posInPage = i % perPage;
+    const col = posInPage % cols;
+    const row = Math.floor(posInPage / cols);
+
+    const x = margin + col * cellW + (cellW - qrSize) / 2;
+    const y = margin + row * cellH + 2;
+
+    const canvas = document.createElement('canvas');
+    const tempDiv = document.createElement('div');
+    tempDiv.style.position = 'absolute';
+    tempDiv.style.left = '-9999px';
+    document.body.appendChild(tempDiv);
+
+    await new Promise(resolve => {
+      new QRCode(tempDiv, {
+        text: passes[i].code,
+        width: 256,
+        height: 256,
+        colorDark: '#1B5E20',
+        colorLight: '#ffffff',
+        correctLevel: QRCode.CorrectLevel.H
+      });
+      setTimeout(resolve, 50);
+    });
+
+    const img = tempDiv.querySelector('img') || tempDiv.querySelector('canvas');
+    if (img) {
+      const src = img.tagName === 'CANVAS' ? img.toDataURL() : img.src;
+      doc.addImage(src, 'PNG', x, y, qrSize, qrSize);
+    }
+    document.body.removeChild(tempDiv);
+
+    doc.setFontSize(8);
+    doc.setTextColor(27, 94, 32);
+    doc.text(passes[i].code, margin + col * cellW + cellW / 2, y + qrSize + 5, { align: 'center' });
+  }
+
+  doc.save('TechRass_QR_Codes.pdf');
+  showToast('PDF downloaded!', 'success');
+}
+
+// ========== EXPORT EXCEL ==========
+function exportExcel() {
+  const passes = loadPasses();
+  if (passes.length === 0) { showToast('No passes to export', 'error'); return; }
+
+  const data = passes.map((p, i) => ({
+    '#': i + 1,
+    'Coupon Code': p.code,
+    'Status': p.status === 'available' ? 'Available' : 'Scanned',
+    'Entry Method': p.entryMethod || '—',
+    'Scanned At': p.scannedAt ? new Date(p.scannedAt).toLocaleString() : '—',
+    'Created At': new Date(p.createdAt).toLocaleString()
+  }));
+
+  const ws = XLSX.utils.json_to_sheet(data);
+  ws['!cols'] = [{ wch: 5 }, { wch: 16 }, { wch: 12 }, { wch: 14 }, { wch: 22 }, { wch: 22 }];
+
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, 'Passes');
+  XLSX.writeFile(wb, 'TechRass_Passes.xlsx');
+  showToast('Excel downloaded!', 'success');
+}
+
+// ========== EXPORT IMAGES ==========
+async function exportImages() {
+  const passes = loadPasses();
+  if (passes.length === 0) { showToast('No passes to export', 'error'); return; }
+
+  if (passes.length === 1) {
+    const dataUrl = await generateQRDataUrl(passes[0].code);
+    downloadDataUrl(dataUrl, passes[0].code + '.png');
+    showToast('Image downloaded!', 'success');
+    return;
+  }
+
+  showToast('Generating images... This may take a moment.', 'warning');
+
+  const link = document.createElement('a');
+  for (let i = 0; i < passes.length; i++) {
+    const dataUrl = await generateQRDataUrl(passes[i].code);
+    link.href = dataUrl;
+    link.download = passes[i].code + '.png';
+    link.click();
+    await new Promise(r => setTimeout(r, 100));
+  }
+  showToast('All QR images downloaded!', 'success');
+}
+
+function generateQRDataUrl(text) {
+  return new Promise(resolve => {
+    const tempDiv = document.createElement('div');
+    tempDiv.style.position = 'absolute';
+    tempDiv.style.left = '-9999px';
+    document.body.appendChild(tempDiv);
+    new QRCode(tempDiv, {
+      text,
+      width: 512,
+      height: 512,
+      colorDark: '#1B5E20',
+      colorLight: '#ffffff',
+      correctLevel: QRCode.CorrectLevel.H
+    });
+    setTimeout(() => {
+      const el = tempDiv.querySelector('canvas') || tempDiv.querySelector('img');
+      let dataUrl;
+      if (el.tagName === 'CANVAS') {
+        dataUrl = el.toDataURL('image/png');
+      } else {
+        const c = document.createElement('canvas');
+        c.width = 512; c.height = 512;
+        const ctx = c.getContext('2d');
+        ctx.drawImage(el, 0, 0, 512, 512);
+        dataUrl = c.toDataURL('image/png');
+      }
+      document.body.removeChild(tempDiv);
+      resolve(dataUrl);
+    }, 100);
+  });
+}
+
+function downloadDataUrl(dataUrl, filename) {
+  const a = document.createElement('a');
+  a.href = dataUrl;
+  a.download = filename;
+  a.click();
+}
+
+// ========== TOAST ==========
+function showToast(msg, type) {
+  const container = document.getElementById('toastContainer');
+  const toast = document.createElement('div');
+  toast.className = `toast toast-${type}`;
+  const icons = {
+    success: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>',
+    error: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>',
+    warning: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>'
+  };
+  toast.innerHTML = (icons[type] || '') + ' ' + msg;
+  container.appendChild(toast);
+  setTimeout(() => { if (toast.parentNode) toast.remove(); }, 3000);
+}
+
+// ========== CLOCK ==========
+function updateClock() {
+  const now = new Date();
+  document.getElementById('clockDisplay').textContent =
+    now.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' }) +
+    '  ' + now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+}
+setInterval(updateClock, 1000);
+updateClock();
+
+// ========== INIT ==========
+updateDashboard();
+</script>
+</body>
+</html>
